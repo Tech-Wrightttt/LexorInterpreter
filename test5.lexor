@@ -1,0 +1,6 @@
+SCRIPT AREA
+START SCRIPT
+DECLARE INT score=95
+DECLARE CHAR p='%'
+PRINT: "Result" & ":" & score & p & $ & "Line 2" & " " & "[#]" & "1"
+END SCRIPT

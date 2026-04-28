@@ -1,0 +1,10 @@
+%% This is a top-level comment
+SCRIPT AREA
+%% Comment between structure words
+START SCRIPT
+%% Comment inside script
+PRINT: "Structure Test Passed"
+END SCRIPT
+%% Comment after script
+
+%%OUTPUT: Structure Test Passed

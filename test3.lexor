@@ -1,0 +1,8 @@
+SCRIPT AREA
+START SCRIPT
+DECLARE INT count, age=18, year=2024
+DECLARE FLOAT salary=500.50, tax
+DECLARE CHAR grade='A', symbol='@'
+DECLARE BOOL isTrue="TRUE", isFalse="FALSE"
+PRINT: count & age & year & $ & salary & $ & grade & $ & isTrue
+END SCRIPT

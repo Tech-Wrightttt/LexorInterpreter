@@ -1,0 +1,6 @@
+SCRIPT AREA
+START SCRIPT
+DECLARE INT x=1, X=2
+%% x and X are different variables [cite: 25]
+PRINT: x & $ & X
+END SCRIPT

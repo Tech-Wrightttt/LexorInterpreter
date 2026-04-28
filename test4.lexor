@@ -1,0 +1,8 @@
+SCRIPT AREA
+START SCRIPT
+DECLARE INT a, b, c
+DECLARE CHAR letter='x'
+a = b = c = 100
+letter = 'Z'
+PRINT: a & b & c & $ & letter
+END SCRIPT
