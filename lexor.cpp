@@ -140,7 +140,7 @@ class Interpreter {
 public:
     Interpreter(std::vector<Token> t) : tokens(t) {}
 
-    void run() {
+void run() {
         std::stack<TokenType> controlStack; // Universal State Machine Stack
 
         while (cur < tokens.size() && tokens[cur].type != TokenType::END_OF_FILE) {
@@ -163,7 +163,7 @@ public:
                         std::string name = tokens[cur++].value;
                         if (cur < tokens.size() && tokens[cur].type == TokenType::ASSIGN) {
                             cur++;
-                            vars[name] = evaluate(tokens[cur++]); // Fixed variable assignment here
+                            vars[name] = evaluate(tokens[cur++]);
                         } else {
                             vars[name] = "";
                         }
@@ -173,21 +173,31 @@ public:
                 }
                 controlStack.pop();
             }
+
+            // --- THE FIX IS HERE ---
             // PDA STATE: ASSIGNMENT
             else if (t.type == TokenType::IDENTIFIER) {
                 controlStack.push(TokenType::ASSIGN);
                 std::vector<std::string> targets;
+
                 while (cur < tokens.size() && tokens[cur].type == TokenType::IDENTIFIER) {
-                    targets.push_back(tokens[cur++].value);
-                    if (cur < tokens.size() && tokens[cur].type == TokenType::ASSIGN) cur++;
-                    else break;
+                    // Lookahead: It is only a "target" if followed by an '='
+                    if (cur + 1 < tokens.size() && tokens[cur + 1].type == TokenType::ASSIGN) {
+                        targets.push_back(tokens[cur].value);
+                        cur += 2; // Skip the IDENTIFIER and the ASSIGN token
+                    } else {
+                        break; // If no '=', this identifier is the Right-Hand VALUE
+                    }
                 }
+
+                // Now evaluate whatever the final value is and assign it
                 if (cur < tokens.size()) {
                     std::string val = evaluate(tokens[cur++]);
                     for (auto& v : targets) vars[v] = val;
                 }
                 controlStack.pop();
             }
+
             // PDA STATE: PRINT
             else if (t.type == TokenType::PRINT) {
                 controlStack.push(TokenType::PRINT);
@@ -196,7 +206,6 @@ public:
                 while (cur < tokens.size() && tokens[cur].type != TokenType::NEWLINE && tokens[cur].type != TokenType::END_SCRIPT) {
                     Token p = tokens[cur++];
 
-                    // Handling unquoted PDA brackets (just in case)
                     if (p.type == TokenType::LBRACKET) {
                         std::stack<int> pda;
                         pda.push(1);
@@ -219,7 +228,6 @@ public:
                         // Consumed: Never printed
                     }
                     else {
-                        // Prints variables, numbers, and dynamically unescapes strings
                         std::cout << evaluate(p);
                     }
                 }
