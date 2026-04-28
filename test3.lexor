@@ -6,3 +6,8 @@ DECLARE CHAR grade='A', symbol='@'
 DECLARE BOOL isTrue="TRUE", isFalse="FALSE"
 PRINT: count & age & year & $ & salary & $ & grade & $ & isTrue
 END SCRIPT
+%% Expected Output:
+%% 182024
+%% 500.50
+%% A
+%% TRUE

@@ -11,3 +11,7 @@ PRINT: "Values:" & first & "&" & second & $
 PRINT: "Status is " & status & $
 PRINT: "Character is: " & "[[]" & initial & "[]]"
 END SCRIPT
+%% Expected Output:
+%% Values:20&10
+%% Status is TRUE
+%% Character is: [J]

@@ -6,3 +6,6 @@ a = b = c = 100
 letter = 'Z'
 PRINT: a & b & c & $ & letter
 END SCRIPT
+%% Expected Output:
+%% 100100100
+%% Z

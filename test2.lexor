@@ -6,5 +6,5 @@ START SCRIPT
 PRINT: "Structure Test Passed"
 END SCRIPT
 %% Comment after script
-
-%%OUTPUT: Structure Test Passed
+%% Expected Output:
+%% Structure Test Passed
