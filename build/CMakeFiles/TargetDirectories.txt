@@ -1,3 +1,0 @@
-C:/Users/zendy/Documents/Projects/LexorProject/build/CMakeFiles/lexor.dir
-C:/Users/zendy/Documents/Projects/LexorProject/build/CMakeFiles/edit_cache.dir
-C:/Users/zendy/Documents/Projects/LexorProject/build/CMakeFiles/rebuild_cache.dir
