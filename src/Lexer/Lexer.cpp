@@ -55,8 +55,12 @@ Token Lexer::nextToken() {
         case ']': return {TokenType::RBRACKET,  "]", line, startCol};
         case '#': return {TokenType::HASH,      "#", line, startCol};
         case ',': return {TokenType::COMMA,     ",", line, startCol};
-        default:  return nextToken(); // skip unknown characters
-    }
+        default:
+            throw std::runtime_error(
+                "Lexer error at line " + std::to_string(line) +
+                ", col " + std::to_string(startCol) +
+                ": unexpected character '" + std::string(1, c) + "'");
+            }
 }
 
 // ── Private helpers ──────────────────────────────────────────────────────────
