@@ -39,24 +39,72 @@ void Parser::skipNewlines() {
 std::vector<StmtPtr> Parser::parse() {
     std::vector<StmtPtr> program;
 
-    // Consume everything up to START SCRIPT
-    while (!atEnd() && !check(TokenType::START_SCRIPT)) advance();
-    if (!atEnd()) advance(); // consume START SCRIPT
+    // 1. Require SCRIPT AREA
+    skipNewlines();
+    if (!check(TokenType::SCRIPT_AREA))
+        throw std::runtime_error("Expected 'SCRIPT AREA' at the start of the program");
+    advance();
+
+    // 2. Require START SCRIPT (and only one)
+    skipNewlines();
+    if (!check(TokenType::START_SCRIPT))
+        throw std::runtime_error("Expected 'START SCRIPT' after 'SCRIPT AREA'");
+    advance();
 
     skipNewlines();
 
+    // 3. Parse body — track if declarations section is over
+    bool declarationsDone = false;
     while (!atEnd() && !check(TokenType::END_SCRIPT)) {
         if (match(TokenType::NEWLINE)) continue;
-        program.push_back(parseStatement());
+
+        // Reject a second START SCRIPT
+        if (check(TokenType::START_SCRIPT))
+            throw std::runtime_error("Unexpected 'START SCRIPT': already inside a script block");
+
+        // Enforce: DECLARE must come before executable statements
+        if (check(TokenType::DECLARE)) {
+            if (declarationsDone)
+                throw std::runtime_error(
+                    "Line " + std::to_string(peek().line) +
+                    ": DECLARE statements must appear before any executable statements");
+            program.push_back(parseDeclare());
+        } else {
+            declarationsDone = true;
+            program.push_back(parseStatement());
+        }
     }
+
+    // 4. Require END SCRIPT
+    if (!check(TokenType::END_SCRIPT))
+        throw std::runtime_error("Expected 'END SCRIPT' to close the script block");
+    advance();
+
+    // 5. Reject anything after END SCRIPT
+    skipNewlines();
+    if (!atEnd())
+        throw std::runtime_error(
+            "Line " + std::to_string(peek().line) +
+            ": unexpected tokens after 'END SCRIPT'");
+
     return program;
 }
 
 // ── Statement dispatch ────────────────────────────────────────────────────────
 
 StmtPtr Parser::parseStatement() {
-    if (check(TokenType::DECLARE)) return parseDeclare();
-    if (check(TokenType::PRINT))   return parsePrint();
+    if (check(TokenType::PRINT)) return parsePrint();
+
+    // Catch reserved words used where a statement is expected
+    TokenType t = peek().type;
+    if (t == TokenType::INT_TYPE  || t == TokenType::CHAR_TYPE ||
+        t == TokenType::BOOL_TYPE || t == TokenType::FLOAT_TYPE ||
+        t == TokenType::END_SCRIPT || t == TokenType::SCRIPT_AREA) {
+        throw std::runtime_error(
+            "Line " + std::to_string(peek().line) +
+            ": unexpected reserved word '" + peek().value + "'");
+    }
+
     return parseAssignOrExpr();
 }
 
@@ -64,25 +112,48 @@ StmtPtr Parser::parseStatement() {
 StmtPtr Parser::parseDeclare() {
     advance(); // consume DECLARE
 
-    // Consume type keyword
+    // Require a valid type keyword
     TokenType varType = peek().type;
     if (varType != TokenType::INT_TYPE  && varType != TokenType::CHAR_TYPE &&
         varType != TokenType::BOOL_TYPE && varType != TokenType::FLOAT_TYPE)
-        throw std::runtime_error("Expected type keyword after DECLARE");
+        throw std::runtime_error(
+            "Line " + std::to_string(peek().line) +
+            ": expected a type (INT, FLOAT, CHAR, BOOL) after DECLARE");
     advance();
 
     auto stmt = std::make_unique<Stmt>();
     DeclareStmt decl;
     decl.varType = varType;
 
-    do {
-        if (match(TokenType::COMMA)) continue;
-        if (!check(TokenType::IDENTIFIER)) break;
+    bool first = true;
+    while (!atEnd() && !check(TokenType::NEWLINE)) {
+        // Expect comma between variables (not before the first one)
+        if (!first) {
+            if (!check(TokenType::COMMA))
+                throw std::runtime_error(
+                    "Line " + std::to_string(peek().line) +
+                    ": expected ',' between variable declarations");
+            advance(); // consume comma
+        }
+        first = false;
+
+        // Must be an IDENTIFIER — reject reserved words used as names
+        if (!check(TokenType::IDENTIFIER)) {
+            throw std::runtime_error(
+                "Line " + std::to_string(peek().line) +
+                ": '" + peek().value + "' is a reserved word and cannot be used as a variable name");
+        }
+
         std::string name = advance().value;
         ExprPtr init = nullptr;
-        if (match(TokenType::ASSIGN)) init = parseExpr();
+        if (match(TokenType::ASSIGN))
+            init = parseExpr();
+
         decl.vars.emplace_back(name, std::move(init));
-    } while (!atEnd() && !check(TokenType::NEWLINE));
+    }
+
+    if (decl.vars.empty())
+        throw std::runtime_error("DECLARE statement has no variable names");
 
     stmt->data = std::move(decl);
     return stmt;
