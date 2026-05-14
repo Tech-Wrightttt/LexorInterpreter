@@ -179,7 +179,7 @@ StmtPtr Parser::parseAssignOrExpr() {
 // PRINT: part part part ...
 StmtPtr Parser::parsePrint() {
     advance(); // consume PRINT
-    match(TokenType::COLON);
+    expect(TokenType::COLON, "Expected ':' after PRINT");
 
     auto stmt = std::make_unique<Stmt>();
     PrintStmt ps;
