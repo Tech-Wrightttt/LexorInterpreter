@@ -24,8 +24,18 @@ void Interpreter::executeStmt(const Stmt& stmt) {
 
 void Interpreter::executeDeclare(const DeclareStmt& s) {
     for (const auto& [name, initExpr] : s.vars) {
-        if (initExpr) env.set(name, evaluate(*initExpr));
-        else          env.set(name, Value{std::string{""}});
+        if (initExpr) {
+            env.set(name, evaluate(*initExpr));
+        } else {
+            // Default value depends on declared type
+            switch (s.varType) {
+                case TokenType::INT_TYPE:   env.set(name, Value{0});      break;
+                case TokenType::FLOAT_TYPE: env.set(name, Value{0.0f});   break;
+                case TokenType::BOOL_TYPE:  env.set(name, Value{false});  break;
+                case TokenType::CHAR_TYPE:  env.set(name, Value{'\0'});   break;
+                default:                    env.set(name, Value{std::string{""}}); break;
+            }
+        }
     }
 }
 
