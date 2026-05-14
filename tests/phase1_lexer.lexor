@@ -1,0 +1,12 @@
+SCRIPT AREA
+
+START SCRIPT
+
+%% Phase 1: Basic declarations and print
+DECLARE INT x = 42, y = 10
+DECLARE CHAR letter = 'A'
+DECLARE BOOL flag = "TRUE"
+
+PRINT: [x] & [letter] & [flag]
+
+END SCRIPT

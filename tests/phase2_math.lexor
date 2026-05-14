@@ -1,0 +1,18 @@
+SCRIPT AREA
+
+START SCRIPT
+
+%% Phase 2: Assignment and chained assignment
+DECLARE INT a = 5
+DECLARE INT b
+
+b = a
+PRINT: [b]
+
+%% Chained
+DECLARE INT c
+DECLARE INT d
+c = d = 99
+PRINT: [c] & [d]
+
+END SCRIPT

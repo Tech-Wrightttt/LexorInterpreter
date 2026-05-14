@@ -1,0 +1,23 @@
+#pragma once
+#include <string>
+
+enum class TokenType {
+    // Structure
+    SCRIPT_AREA, START_SCRIPT, END_SCRIPT,
+    // Keywords
+    DECLARE, INT_TYPE, CHAR_TYPE, BOOL_TYPE, FLOAT_TYPE,
+    PRINT,
+    // Literals & Identifiers
+    IDENTIFIER, INT_LIT, FLOAT_LIT, CHAR_LIT, BOOL_LIT, STRING_LIT,
+    // Symbols
+    ASSIGN, AMPERSAND, DOLLAR, LBRACKET, RBRACKET, HASH, COLON, COMMA,
+    // Control
+    NEWLINE, END_OF_FILE
+};
+
+struct Token {
+    TokenType   type;
+    std::string value;
+    int         line;
+    int         col;
+};
