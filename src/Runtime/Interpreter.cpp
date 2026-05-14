@@ -32,8 +32,11 @@ void Interpreter::executeDeclare(const DeclareStmt& s) {
 void Interpreter::executeAssign(const AssignStmt& s) {
     if (!s.value) return;
     Value val = evaluate(*s.value);
-    for (const auto& name : s.targets)
+    for (const auto& name : s.targets) {
+        if (!env.has(name))
+            throw std::runtime_error("Assignment to undeclared variable '" + name + "'");
         env.set(name, val);
+    }
 }
 
 void Interpreter::executePrint(const PrintStmt& s) {
