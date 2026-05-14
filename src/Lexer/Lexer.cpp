@@ -55,6 +55,13 @@ Token Lexer::nextToken() {
         case ']': return {TokenType::RBRACKET,  "]", line, startCol};
         case '#': return {TokenType::HASH,      "#", line, startCol};
         case ',': return {TokenType::COMMA,     ",", line, startCol};
+        case '+': return {TokenType::PLUS,     "+", line, startCol};
+        case '-': return {TokenType::MINUS,    "-", line, startCol};
+        case '*': return {TokenType::STAR,     "*", line, startCol};
+        case '/': return {TokenType::SLASH,    "/", line, startCol};
+        case '%': return {TokenType::PERCENT,  "%", line, startCol};
+        case '(': return {TokenType::LPAREN,   "(", line, startCol};
+        case ')': return {TokenType::RPAREN,   ")", line, startCol};
         default:
             throw std::runtime_error(
                 "Lexer error at line " + std::to_string(line) +
@@ -114,12 +121,28 @@ Token Lexer::lexNumber() {
 }
 
 Token Lexer::lexString() {
-    int startCol = col;
+    int startCol  = col;
+    int startLine = line;   // ← add this
     char quote = current();
     advance(); // consume opening quote
     std::string val;
-    while (!atEnd() && current() != quote) { val += current(); advance(); }
-    if (!atEnd()) advance(); // consume closing quote
+    while (!atEnd() && current() != quote && current() != '\n') {
+        val += current(); advance();
+    }
+    if (atEnd() || current() == '\n')
+        throw std::runtime_error(
+            "Lexer error at line " + std::to_string(startLine) +
+            ": unterminated " + (quote == '\'' ? "char" : "string") + " literal");
+    advance(); // consume closing quote
+
+    // reject multi-character CHAR literals
+    if (quote == '\'') {
+        if (val.size() != 1)
+            throw std::runtime_error(
+                "Lexer error at line " + std::to_string(startLine) +
+                ": CHAR literal must be exactly one character, got '" + val + "'");
+        return {TokenType::CHAR_LIT, val, line, startCol};
+    }
 
     if (val == "TRUE" || val == "FALSE")
         return {TokenType::BOOL_LIT, val, line, startCol};

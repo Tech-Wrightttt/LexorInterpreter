@@ -12,7 +12,11 @@ enum class TokenType {
     // Symbols
     ASSIGN, AMPERSAND, DOLLAR, LBRACKET, RBRACKET, HASH, COLON, COMMA,
     // Control
-    NEWLINE, END_OF_FILE
+    NEWLINE, END_OF_FILE,
+    // Operators 
+    PLUS, MINUS, STAR, SLASH, PERCENT, LPAREN, RPAREN,
+    // also for comparisons:
+    GT, LT, GTE, LTE, EQ, NEQ
 };
 
 struct Token {
