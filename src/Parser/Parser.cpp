@@ -231,37 +231,125 @@ std::vector<ExprPtr> Parser::parsePrintParts() {
 // Bracket group: [ parts... ]
 ExprPtr Parser::parseBracketGroup() {
     expect(TokenType::LBRACKET, "Expected '['");
-    std::vector<ExprPtr> inner;
+    std::string literal;
 
-    // Depth-tracked to handle nested brackets
-    int depth = 1;
-    while (!atEnd() && depth > 0) {
+    while (!atEnd() && !check(TokenType::NEWLINE)) {
         if (check(TokenType::LBRACKET)) {
-            advance(); depth++;
-            // Represent nested bracket as its own BracketExpr
-            // (we re-enter by collecting a sub-group)
-            // For simplicity push a literal "[" so inner brackets print verbatim
-            inner.push_back(makeLiteral("["));
+            // [[ = escaped [
+            advance();
+            literal += '[';
         } else if (check(TokenType::RBRACKET)) {
-            advance(); depth--;
-            if (depth > 0) inner.push_back(makeLiteral("]"));
-        } else if (check(TokenType::DOLLAR)) {
+            // single ] = closing bracket
             advance();
-            inner.push_back(makeLiteral("\n"));
-        } else if (check(TokenType::AMPERSAND)) {
-            advance();
+            break;
         } else {
-            inner.push_back(parsePrimary());
+            literal += peek().value;
+            advance();
         }
     }
-    return makeBracket(std::move(inner));
+
+    return makeLiteral(literal);
 }
 
+// Precedence (lowest to highest):
+// OR
+// AND
+// NOT
+// > < >= <= == <>
+// + -
+// * / %
+// unary + -
+// primary
+
 ExprPtr Parser::parseExpr() {
-    return parsePrimary(); // extend here for BinaryExpr / math later
+    return parseOr();
+}
+
+ExprPtr Parser::parseOr() {
+    ExprPtr left = parseAnd();
+    while (check(TokenType::OR)) {
+        advance();
+        ExprPtr right = parseAnd();
+        left = makeBinary("OR", std::move(left), std::move(right));
+    }
+    return left;
+}
+
+ExprPtr Parser::parseAnd() {
+    ExprPtr left = parseNot();
+    while (check(TokenType::AND)) {
+        advance();
+        ExprPtr right = parseNot();
+        left = makeBinary("AND", std::move(left), std::move(right));
+    }
+    return left;
+}
+
+ExprPtr Parser::parseNot() {
+    if (check(TokenType::NOT)) {
+        advance();
+        ExprPtr operand = parseNot(); // right-associative
+        return makeUnary("NOT", std::move(operand));
+    }
+    return parseComparison();
+}
+
+ExprPtr Parser::parseComparison() {
+    ExprPtr left = parseAddSub();
+    while (check(TokenType::GT)  || check(TokenType::LT) ||
+           check(TokenType::GTE) || check(TokenType::LTE) ||
+           check(TokenType::EQ)  || check(TokenType::NEQ)) {
+        std::string op = peek().value;
+        advance();
+        ExprPtr right = parseAddSub();
+        left = makeBinary(op, std::move(left), std::move(right));
+    }
+    return left;
+}
+
+ExprPtr Parser::parseAddSub() {
+    ExprPtr left = parseMulDiv();
+    while (check(TokenType::PLUS) || check(TokenType::MINUS)) {
+        std::string op = peek().value;
+        advance();
+        ExprPtr right = parseMulDiv();
+        left = makeBinary(op, std::move(left), std::move(right));
+    }
+    return left;
+}
+
+ExprPtr Parser::parseMulDiv() {
+    ExprPtr left = parseUnary();
+    while (check(TokenType::STAR) || check(TokenType::SLASH) || check(TokenType::PERCENT)) {
+        std::string op = peek().value;
+        advance();
+        ExprPtr right = parseUnary();
+        left = makeBinary(op, std::move(left), std::move(right));
+    }
+    return left;
+}
+
+ExprPtr Parser::parseUnary() {
+    if (check(TokenType::MINUS)) {
+        advance();
+        ExprPtr operand = parseUnary();
+        return makeUnary("-", std::move(operand));
+    }
+    if (check(TokenType::PLUS)) {
+        advance();
+        return parseUnary(); // unary + is a no-op
+    }
+    return parsePrimary();
 }
 
 ExprPtr Parser::parsePrimary() {
+    if (check(TokenType::LPAREN)) {
+        advance();                    // consume '('
+        ExprPtr expr = parseExpr();   // parse inner expression
+        expect(TokenType::RPAREN, "Expected ')' after expression");
+        return expr;
+    }
+
     Token t = advance();
     switch (t.type) {
         case TokenType::IDENTIFIER: return makeVar(t.value);
@@ -271,6 +359,6 @@ ExprPtr Parser::parsePrimary() {
         case TokenType::STRING_LIT:
         case TokenType::CHAR_LIT:   return makeLiteral(t.value);
         default:
-            return makeLiteral(t.value); // fallback
+            return makeLiteral(t.value);
     }
 }

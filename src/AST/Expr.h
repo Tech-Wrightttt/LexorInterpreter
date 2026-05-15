@@ -17,11 +17,16 @@ struct VarExpr {
     std::string name;
 };
 
-// Placeholder for future math support: left OP right
+
 struct BinaryExpr {
     ExprPtr     left;
-    char        op;   // '+', '-', '*', '/'
+    std::string op;   // "+", "-", "*", "/", "%", ">", "<", ">=", "<=", "==", "<>", "AND", "OR"
     ExprPtr     right;
+};
+
+struct UnaryExpr {
+    std::string op;   // "+", "-", "NOT"
+    ExprPtr     operand;
 };
 
 // A bracket-delimited group in a PRINT: [ ... ]
@@ -33,7 +38,7 @@ struct BracketExpr {
 #include <variant>
 
 struct Expr {
-    std::variant<LiteralExpr, VarExpr, BinaryExpr, BracketExpr> data;
+    std::variant<LiteralExpr, VarExpr, BinaryExpr, BracketExpr, UnaryExpr> data;
 };
 
 // ── Convenience factories ─────────────────────────────────────────────────────
@@ -50,5 +55,15 @@ inline ExprPtr makeVar(std::string name) {
 inline ExprPtr makeBracket(std::vector<ExprPtr> parts) {
     auto e = std::make_unique<Expr>();
     e->data = BracketExpr{std::move(parts)};
+    return e;
+}
+inline ExprPtr makeUnary(std::string op, ExprPtr operand) {
+    auto e = std::make_unique<Expr>();
+    e->data = UnaryExpr{std::move(op), std::move(operand)};
+    return e;
+}
+inline ExprPtr makeBinary(std::string op, ExprPtr left, ExprPtr right) {
+    auto e = std::make_unique<Expr>();
+    e->data = BinaryExpr{std::move(left), std::move(op), std::move(right)};
     return e;
 }

@@ -16,7 +16,9 @@ enum class TokenType {
     // Operators 
     PLUS, MINUS, STAR, SLASH, PERCENT, LPAREN, RPAREN,
     // also for comparisons:
-    GT, LT, GTE, LTE, EQ, NEQ
+    GT, LT, GTE, LTE, EQ, NEQ,
+    // Logical operators 
+    AND, OR, NOT
 };
 
 struct Token {

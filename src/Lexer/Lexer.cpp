@@ -39,12 +39,30 @@ Token Lexer::nextToken() {
         return nextToken(); // tail-recurse to get the next real token
     }
 
+    // Single-character symbols
+    int startCol = col;
+
     if (isalpha((unsigned char)c) || c == '_') return lexIdentifierOrKeyword();
     if (isdigit((unsigned char)c))             return lexNumber();
     if (c == '"' || c == '\'')                 return lexString();
+    // Multi-character operators
+    if (c == '>' && pos + 1 < src.length() && src[pos + 1] == '=') {
+        advance(); advance();
+        return {TokenType::GTE, ">=", line, startCol};
+    }
+    if (c == '<' && pos + 1 < src.length() && src[pos + 1] == '=') {
+        advance(); advance();
+        return {TokenType::LTE, "<=", line, startCol};
+    }
+    if (c == '=' && pos + 1 < src.length() && src[pos + 1] == '=') {
+        advance(); advance();
+        return {TokenType::EQ, "==", line, startCol};
+    }
+    if (c == '<' && pos + 1 < src.length() && src[pos + 1] == '>') {
+        advance(); advance();
+        return {TokenType::NEQ, "<>", line, startCol};
+    }
 
-    // Single-character symbols
-    int startCol = col;
     advance();
     switch (c) {
         case '=': return {TokenType::ASSIGN,    "=", line, startCol};
@@ -62,6 +80,8 @@ Token Lexer::nextToken() {
         case '%': return {TokenType::PERCENT,  "%", line, startCol};
         case '(': return {TokenType::LPAREN,   "(", line, startCol};
         case ')': return {TokenType::RPAREN,   ")", line, startCol};
+        case '>': return {TokenType::GT,    ">", line, startCol};
+        case '<': return {TokenType::LT,    "<", line, startCol};
         default:
             throw std::runtime_error(
                 "Lexer error at line " + std::to_string(line) +
@@ -105,6 +125,9 @@ Token Lexer::lexIdentifierOrKeyword() {
     if (val == "FLOAT")   return {TokenType::FLOAT_TYPE,"FLOAT",   line, startCol};
     if (val == "PRINT")   return {TokenType::PRINT,     "PRINT",   line, startCol};
     if (val == "SCAN")    return {TokenType::SCAN,    "SCAN",    line, startCol};
+    if (val == "AND")     return {TokenType::AND, "AND", line, startCol};
+    if (val == "OR")      return {TokenType::OR,  "OR",  line, startCol};
+    if (val == "NOT")     return {TokenType::NOT, "NOT", line, startCol};
 
     return {TokenType::IDENTIFIER, val, line, startCol};
 }

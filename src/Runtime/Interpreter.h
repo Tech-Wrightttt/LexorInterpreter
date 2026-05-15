@@ -24,6 +24,8 @@ private:
     Value evalLiteral   (const LiteralExpr& e);
     Value evalVar       (const VarExpr& e);
     Value evalBracket   (const BracketExpr& e);
+    Value evalBinary(const BinaryExpr& e);
+    Value evalUnary (const UnaryExpr& e);
 
     // ── Helpers ───────────────────────────────────────────────────────────────
     // Resolves [ ] bracket content (PDA-style strip/pass-through)

@@ -37,5 +37,12 @@ private:
     ExprPtr parseExpr();
     ExprPtr parsePrimary();
     ExprPtr parseBracketGroup();
+    ExprPtr parseOr();
+    ExprPtr parseAnd();
+    ExprPtr parseNot();
+    ExprPtr parseComparison();
+    ExprPtr parseAddSub();
+    ExprPtr parseMulDiv();
+    ExprPtr parseUnary();
     std::vector<ExprPtr> parsePrintParts();
 };
