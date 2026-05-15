@@ -26,6 +26,9 @@ void Interpreter::executeStmt(const Stmt& stmt) {
 
 void Interpreter::executeDeclare(const DeclareStmt& s) {
     for (const auto& [name, initExpr] : s.vars) {
+        if (env.has(name))
+            throw std::runtime_error(
+                "Variable '" + name + "' has already been declared");
         Value val;
         if (initExpr) {
             val = evaluate(*initExpr);
