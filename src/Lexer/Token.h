@@ -6,7 +6,7 @@ enum class TokenType {
     SCRIPT_AREA, START_SCRIPT, END_SCRIPT,
     // Keywords
     DECLARE, INT_TYPE, CHAR_TYPE, BOOL_TYPE, FLOAT_TYPE,
-    PRINT,
+    PRINT, SCAN,
     // Literals & Identifiers
     IDENTIFIER, INT_LIT, FLOAT_LIT, CHAR_LIT, BOOL_LIT, STRING_LIT,
     // Symbols

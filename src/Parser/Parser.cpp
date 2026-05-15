@@ -105,6 +105,7 @@ StmtPtr Parser::parseStatement() {
             ": unexpected reserved word '" + peek().value + "'");
     }
 
+    if (check(TokenType::SCAN)) return parseScan();
     return parseAssignOrExpr();
 }
 
@@ -185,6 +186,26 @@ StmtPtr Parser::parsePrint() {
     PrintStmt ps;
     ps.parts = parsePrintParts();
     stmt->data = std::move(ps);
+    return stmt;
+}
+
+StmtPtr Parser::parseScan() {
+    advance(); // consume SCAN
+    expect(TokenType::COLON, "Expected ':' after SCAN");
+
+    auto stmt = std::make_unique<Stmt>();
+    ScanStmt ss;
+
+    // Expect at least one variable name
+    Token nameTok = expect(TokenType::IDENTIFIER, "Expected variable name after 'SCAN:'");
+    ss.targets.push_back(nameTok.value);
+
+    while (match(TokenType::COMMA)) {
+        Token next = expect(TokenType::IDENTIFIER, "Expected variable name after ','");
+        ss.targets.push_back(next.value);
+    }
+
+    stmt->data = std::move(ss);
     return stmt;
 }
 

@@ -34,9 +34,14 @@ struct IfStmt {
     std::vector<StmtPtr> body;
 };
 
+// SCAN: var, var, ...
+struct ScanStmt {
+    std::vector<std::string> targets; // variable names to read into
+};
+
 // ── Variant node ─────────────────────────────────────────────────────────────
 #include <variant>
 
 struct Stmt {
-    std::variant<DeclareStmt, AssignStmt, PrintStmt, IfStmt> data;
+    std::variant<DeclareStmt, AssignStmt, PrintStmt, IfStmt, ScanStmt> data;
 };

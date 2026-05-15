@@ -104,6 +104,7 @@ Token Lexer::lexIdentifierOrKeyword() {
     if (val == "BOOL")    return {TokenType::BOOL_TYPE, "BOOL",    line, startCol};
     if (val == "FLOAT")   return {TokenType::FLOAT_TYPE,"FLOAT",   line, startCol};
     if (val == "PRINT")   return {TokenType::PRINT,     "PRINT",   line, startCol};
+    if (val == "SCAN")    return {TokenType::SCAN,    "SCAN",    line, startCol};
 
     return {TokenType::IDENTIFIER, val, line, startCol};
 }
@@ -122,7 +123,7 @@ Token Lexer::lexNumber() {
 
 Token Lexer::lexString() {
     int startCol  = col;
-    int startLine = line;   // ← add this
+    int startLine = line;   
     char quote = current();
     advance(); // consume opening quote
     std::string val;

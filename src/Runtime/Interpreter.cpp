@@ -1,6 +1,7 @@
 #include "Interpreter.h"
 #include <iostream>
 #include <stdexcept>
+#include <sstream>
 
 // ── Public ────────────────────────────────────────────────────────────────────
 
@@ -17,6 +18,7 @@ void Interpreter::executeStmt(const Stmt& stmt) {
         if constexpr (std::is_same_v<T, DeclareStmt>) executeDeclare(s);
         else if constexpr (std::is_same_v<T, AssignStmt>)  executeAssign(s);
         else if constexpr (std::is_same_v<T, PrintStmt>)   executePrint(s);
+        else if constexpr (std::is_same_v<T, ScanStmt>) executeScan(s);
         else if constexpr (std::is_same_v<T, IfStmt>)
             throw std::runtime_error("IfStmt not yet implemented");
     }, stmt.data);
@@ -52,6 +54,29 @@ void Interpreter::executeAssign(const AssignStmt& s) {
 void Interpreter::executePrint(const PrintStmt& s) {
     for (const auto& part : s.parts)
         std::cout << evaluate(*part).toString();
+}
+
+void Interpreter::executeScan(const ScanStmt& s) {
+    // Spec: multiple values entered separated by comma
+    std::string line;
+    std::getline(std::cin, line);
+    std::stringstream ss(line);
+    std::string token;
+    size_t i = 0;
+
+    while (std::getline(ss, token, ',') && i < s.targets.size()) {
+        // Trim whitespace
+        token.erase(0, token.find_first_not_of(" \t"));
+        token.erase(token.find_last_not_of(" \t") + 1);
+
+        const std::string& name = s.targets[i++];
+        if (!env.has(name))
+            throw std::runtime_error("SCAN target '" + name + "' is not declared");
+        env.set(name, coerceLiteral(token));
+    }
+    if (i < s.targets.size())
+        throw std::runtime_error("SCAN expected " + std::to_string(s.targets.size()) +
+                                 " value(s) but got " + std::to_string(i));
 }
 
 // ── Expression evaluation ─────────────────────────────────────────────────────

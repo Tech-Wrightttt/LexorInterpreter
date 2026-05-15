@@ -31,6 +31,7 @@ private:
     StmtPtr parseDeclare();
     StmtPtr parseAssignOrExpr();
     StmtPtr parsePrint();
+    StmtPtr parseScan();
 
     // ── Expression parsers ─────────────────────────────────────────────────
     ExprPtr parseExpr();

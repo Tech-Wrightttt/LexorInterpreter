@@ -17,6 +17,7 @@ private:
     void executeDeclare(const DeclareStmt& s);
     void executeAssign (const AssignStmt& s);
     void executePrint  (const PrintStmt& s);
+    void executeScan   (const ScanStmt& s);
 
     // ── Expression evaluators ─────────────────────────────────────────────────
     Value evaluate      (const Expr& expr);
