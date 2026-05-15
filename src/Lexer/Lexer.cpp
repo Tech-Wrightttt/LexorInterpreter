@@ -135,10 +135,20 @@ Token Lexer::lexIdentifierOrKeyword() {
 Token Lexer::lexNumber() {
     int startCol = col;
     std::string val;
-    while (!atEnd() && isdigit((unsigned char)current())) { val += current(); advance(); }
+    while (!atEnd() && isdigit((unsigned char)current()))
+        { val += current(); advance(); }
+
     if (!atEnd() && current() == '.') {
-        val += current(); advance();
-        while (!atEnd() && isdigit((unsigned char)current())) { val += current(); advance(); }
+        val += current(); advance(); // consume '.'
+        
+        // Must have at least one digit after the dot
+        if (atEnd() || !isdigit((unsigned char)current()))
+            throw std::runtime_error(
+                "Lexer error at line " + std::to_string(line) +
+                ": expected digits after '.' in float literal");
+
+        while (!atEnd() && isdigit((unsigned char)current()))
+            { val += current(); advance(); }
         return {TokenType::FLOAT_LIT, val, line, startCol};
     }
     return {TokenType::INT_LIT, val, line, startCol};

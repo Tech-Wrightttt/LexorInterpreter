@@ -32,7 +32,9 @@ void Interpreter::executeDeclare(const DeclareStmt& s) {
         Value val;
         if (initExpr) {
             val = evaluate(*initExpr);
-            checkType(name, s.varType, val); // ← validate init value
+            checkType(name, s.varType, val);
+            if (s.varType == TokenType::FLOAT_TYPE && std::holds_alternative<int>(val.data))
+                val = Value{(float)std::get<int>(val.data)};
         } else {
             switch (s.varType) {
                 case TokenType::INT_TYPE:   val = Value{0};      break;
@@ -53,6 +55,8 @@ void Interpreter::executeAssign(const AssignStmt& s) {
         if (!env.has(name))
             throw std::runtime_error("Assignment to undeclared variable '" + name + "'");
         checkType(name, env.getType(name), val); // ← validate before setting
+        if (env.getType(name) == TokenType::FLOAT_TYPE && std::holds_alternative<int>(val.data))
+            val = Value{(float)std::get<int>(val.data)};
         env.set(name, val);
     }
 }
@@ -63,23 +67,31 @@ void Interpreter::executePrint(const PrintStmt& s) {
 }
 
 void Interpreter::executeScan(const ScanStmt& s) {
-    // Spec: multiple values entered separated by comma
-    std::string line;
-    std::getline(std::cin, line);
-    std::stringstream ss(line);
+    std::string inputLine;
+    std::getline(std::cin, inputLine);
+    
+    // Strip carriage return (Windows line endings)
+    if (!inputLine.empty() && inputLine.back() == '\r')
+        inputLine.pop_back();
+
+    std::stringstream ss(inputLine);
     std::string token;
     size_t i = 0;
 
     while (std::getline(ss, token, ',') && i < s.targets.size()) {
         // Trim whitespace
-        token.erase(0, token.find_first_not_of(" \t"));
-        token.erase(token.find_last_not_of(" \t") + 1);
+        token.erase(0, token.find_first_not_of(" \t\r\n"));
+        token.erase(token.find_last_not_of(" \t\r\n") + 1);
 
         const std::string& name = s.targets[i++];
         if (!env.has(name))
             throw std::runtime_error("SCAN target '" + name + "' is not declared");
-        env.set(name, coerceLiteral(token));
+
+        Value val = coerceLiteral(token);
+        checkType(name, env.getType(name), val);
+        env.set(name, val);
     }
+
     if (i < s.targets.size())
         throw std::runtime_error("SCAN expected " + std::to_string(s.targets.size()) +
                                  " value(s) but got " + std::to_string(i));
@@ -261,7 +273,9 @@ void Interpreter::checkType(const std::string& name, TokenType expected, const V
             expectedName = "INT";
             break;
         case TokenType::FLOAT_TYPE:
-            ok = std::holds_alternative<float>(val.data);
+            // Allow INT assigned to FLOAT (implicit promotion)
+            ok = std::holds_alternative<float>(val.data) ||
+                 std::holds_alternative<int>(val.data);
             expectedName = "FLOAT";
             break;
         case TokenType::BOOL_TYPE:

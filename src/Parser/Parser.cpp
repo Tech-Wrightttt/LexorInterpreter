@@ -222,7 +222,7 @@ std::vector<ExprPtr> Parser::parsePrintParts() {
         } else if (check(TokenType::AMPERSAND)) {
             advance(); // separator consumed but not printed
         } else {
-            parts.push_back(parsePrimary());
+            parts.push_back(parseExpr());
         }
     }
     return parts;

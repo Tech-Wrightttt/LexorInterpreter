@@ -20,7 +20,12 @@ struct Value {
         return std::visit([](auto&& v) -> std::string {
             using T = std::decay_t<decltype(v)>;
             if constexpr (std::is_same_v<T, int>)         return std::to_string(v);
-            if constexpr (std::is_same_v<T, float>)       return std::to_string(v);
+            if constexpr (std::is_same_v<T, float>) {
+                std::string s = std::to_string(v);
+                s.erase(s.find_last_not_of('0') + 1);
+                if (s.back() == '.') s += '0';
+                return s;
+            }
             if constexpr (std::is_same_v<T, char>)        return std::string(1, v);
             if constexpr (std::is_same_v<T, bool>)        return v ? "TRUE" : "FALSE";
             if constexpr (std::is_same_v<T, std::string>) return v;
