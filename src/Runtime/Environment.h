@@ -1,19 +1,24 @@
 #pragma once
-#include <map>
 #include <string>
-#include <optional>
+#include <unordered_map>
+#include "../Lexer/Token.h"
 #include "Value.h"
 
 class Environment {
 public:
-    void set(const std::string& name, Value val) {
-        store[name] = std::move(val);
+    void declareVar(const std::string& name, TokenType type, Value val) {
+        types[name] = type;
+        store[name] = val;
     }
 
-    // Returns the stored Value or an empty string Value if not found
+    void set(const std::string& name, Value val) {
+        store[name] = val;
+    }
+
     Value get(const std::string& name) const {
         auto it = store.find(name);
-        if (it == store.end()) return Value{std::string{""}};
+        if (it == store.end())
+            throw std::runtime_error("Undefined variable '" + name + "'");
         return it->second;
     }
 
@@ -21,6 +26,14 @@ public:
         return store.count(name) > 0;
     }
 
+    TokenType getType(const std::string& name) const {
+        auto it = types.find(name);
+        if (it == types.end())
+            throw std::runtime_error("No type info for variable '" + name + "'");
+        return it->second;
+    }
+
 private:
-    std::map<std::string, Value> store;
+    std::unordered_map<std::string, Value>     store;
+    std::unordered_map<std::string, TokenType> types;
 };

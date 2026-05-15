@@ -29,10 +29,6 @@ int main(int argc, char* argv[]) {
     while ((tok = lexer.nextToken()).type != TokenType::END_OF_FILE)
         tokens.push_back(tok);
 
-    for (auto& tok : tokens) {
-    std::cout << "TOKEN: type=" << (int)tok.type 
-              << " value='" << tok.value << "'\n";
-}
     // ── 3. Parse ──────────────────────────────────────────────────────────────
     Parser parser(std::move(tokens));
     std::vector<StmtPtr> program;

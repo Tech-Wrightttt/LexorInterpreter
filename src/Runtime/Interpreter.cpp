@@ -26,18 +26,20 @@ void Interpreter::executeStmt(const Stmt& stmt) {
 
 void Interpreter::executeDeclare(const DeclareStmt& s) {
     for (const auto& [name, initExpr] : s.vars) {
+        Value val;
         if (initExpr) {
-            env.set(name, evaluate(*initExpr));
+            val = evaluate(*initExpr);
+            checkType(name, s.varType, val); // ← validate init value
         } else {
-            // Default value depends on declared type
             switch (s.varType) {
-                case TokenType::INT_TYPE:   env.set(name, Value{0});      break;
-                case TokenType::FLOAT_TYPE: env.set(name, Value{0.0f});   break;
-                case TokenType::BOOL_TYPE:  env.set(name, Value{false});  break;
-                case TokenType::CHAR_TYPE:  env.set(name, Value{'\0'});   break;
-                default:                    env.set(name, Value{std::string{""}}); break;
+                case TokenType::INT_TYPE:   val = Value{0};      break;
+                case TokenType::FLOAT_TYPE: val = Value{0.0f};   break;
+                case TokenType::BOOL_TYPE:  val = Value{false};  break;
+                case TokenType::CHAR_TYPE:  val = Value{'\0'};   break;
+                default:                    val = Value{std::string{""}}; break;
             }
         }
+        env.declareVar(name, s.varType, val);
     }
 }
 
@@ -47,6 +49,7 @@ void Interpreter::executeAssign(const AssignStmt& s) {
     for (const auto& name : s.targets) {
         if (!env.has(name))
             throw std::runtime_error("Assignment to undeclared variable '" + name + "'");
+        checkType(name, env.getType(name), val); // ← validate before setting
         env.set(name, val);
     }
 }
@@ -243,4 +246,35 @@ Value Interpreter::coerceLiteral(const std::string& raw) {
     if (raw.size() == 1) return Value{raw[0]};
 
     return Value{raw};
+}
+
+void Interpreter::checkType(const std::string& name, TokenType expected, const Value& val) {
+    bool ok = false;
+    std::string expectedName;
+
+    switch (expected) {
+        case TokenType::INT_TYPE:
+            ok = std::holds_alternative<int>(val.data);
+            expectedName = "INT";
+            break;
+        case TokenType::FLOAT_TYPE:
+            ok = std::holds_alternative<float>(val.data);
+            expectedName = "FLOAT";
+            break;
+        case TokenType::BOOL_TYPE:
+            ok = std::holds_alternative<bool>(val.data);
+            expectedName = "BOOL";
+            break;
+        case TokenType::CHAR_TYPE:
+            ok = std::holds_alternative<char>(val.data);
+            expectedName = "CHAR";
+            break;
+        default:
+            return; // no check needed
+    }
+
+    if (!ok)
+        throw std::runtime_error(
+            "Type error: variable '" + name + "' is " + expectedName +
+            " but got incompatible value '" + val.toString() + "'");
 }

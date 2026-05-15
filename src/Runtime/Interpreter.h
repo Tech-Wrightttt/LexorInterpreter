@@ -18,6 +18,7 @@ private:
     void executeAssign (const AssignStmt& s);
     void executePrint  (const PrintStmt& s);
     void executeScan   (const ScanStmt& s);
+    void checkType(const std::string& name, TokenType expected, const Value& val);
 
     // ── Expression evaluators ─────────────────────────────────────────────────
     Value evaluate      (const Expr& expr);
