@@ -43,6 +43,7 @@ int main(int argc, char* argv[]) {
     Interpreter interpreter;
     try {
         interpreter.execute(program);
+        std::cout << "\nProgram executed successfully.\n";
     } catch (const std::exception& e) {
         std::cerr << "Runtime error: " << e.what() << "\n";
         return 1;
